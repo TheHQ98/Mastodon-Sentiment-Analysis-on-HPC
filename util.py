@@ -1,4 +1,5 @@
 import ujson as json
+from datetime import datetime
 
 
 def processing_current_line(line: str):
@@ -61,16 +62,47 @@ def find_own_lines(file_path, start_line, end_line):
     """
     valid_lines = 0
     current_line = 0
+    sentiments_hour = {}
 
     with open(file_path, "r", encoding="utf-8") as f:
         for line in f:
             if start_line <= current_line <= end_line:
                 record = processing_current_line(line)
-                if record is not None:
-                    valid_lines += 1
-            current_line += 1
+                if record is None:
+                    continue
 
+                #print(record)
+                add_record_into_dic_hour(sentiments_hour, record)
+
+                valid_lines += 1
+
+            current_line += 1
             if current_line > end_line:
                 break
 
-    return valid_lines
+    return sentiments_hour
+
+
+def add_record_into_dic_hour(sentiments_hour, record):
+    try:
+        # produce time into my format
+        dt = datetime.fromisoformat(record["createdAt"].replace("Z", "+00:00"))
+        hour = dt.strftime("%Y-%m-%d %H")
+        #print(f"{record.get('createdAt')} vs {hour}")
+        try:
+            # produce sentiment into float
+            sentiment = float(record["sentiment"])
+            if hour in sentiments_hour:
+                sentiments_hour[hour] += sentiment
+            else:
+                sentiments_hour[hour] = sentiment
+        except (ValueError, TypeError):
+            print("ERROR: processing sentiment into float")
+    except ValueError:
+        print("ERROR: processing record into time")
+
+
+def merge_dicts_sentiments_hour(a, b):
+    for k, v in b.items():
+        a[k] = a.get(k, 0) + v
+    return a

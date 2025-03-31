@@ -9,6 +9,7 @@ def main(file_path):
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+    all_sentiments_hour = None
 
     # calculate the total lines of the file
     if rank == 0:
@@ -21,7 +22,9 @@ def main(file_path):
 
     total_lines = comm.bcast(total_lines, root=0)
 
-    # Calculate the lines that belong to your core that should be handled
+    # --------------------------------------------------------------------------------------------------------
+    # Step 1: Calculate the lines that belong to each core that should be handled
+    # --------------------------------------------------------------------------------------------------------
     if size == 1:  # single-core
         start_line, end_line = 0, int(total_lines) - 1
         # print(f"This is rank {rank}, start line: {start_line}, end line: {end_line}")
@@ -29,11 +32,30 @@ def main(file_path):
         start_line, end_line = start_end_lines(rank, int(total_lines), size)
         # print(f"This is rank {rank}, start line: {start_line}, end line: {end_line}")
 
-    valid_lines = find_own_lines(file_path, start_line, end_line)
+    # valid_lines = find_own_lines(file_path, start_line, end_line)
+    # print(f"This is rank {rank}, start line: {start_line}, end line: {end_line}, produced / valid: "
+    #       f"{end_line-start_line+1} / {valid_lines}")
 
-    print(f"This is rank {rank}, start line: {start_line}, end line: {end_line}, produced / valid: "
-          f"{end_line-start_line+1} / {valid_lines}")
+    # --------------------------------------------------------------------------------------------------------
+    # Step 2: Produce own lines with two dictionary: sentiments_hour and sentiments_people
+    # --------------------------------------------------------------------------------------------------------
+    sentiments_hour = find_own_lines(file_path, start_line, end_line)
+    # print(f"Rank {rank}: {sentiments_hour}")
 
+    # --------------------------------------------------------------------------------------------------------
+    # Step 3: core 0 collect dictionary from others core
+    # --------------------------------------------------------------------------------------------------------
+    if size == 1:  # single-core
+        print(sentiments_hour)
+    else:  # multi-core
+        all_sentiments_hour = comm.reduce(sentiments_hour, op=merge_dicts_sentiments_hour, root=0)
+
+    # --------------------------------------------------------------------------------------------------------
+    # Step 4: core 0 produce final result
+    # --------------------------------------------------------------------------------------------------------
+    if rank == 0:
+        if all_sentiments_hour is not None:
+            print(all_sentiments_hour)
 
 
 if __name__ == "__main__":
@@ -42,5 +64,5 @@ if __name__ == "__main__":
         #print(f"SYSTEM: {path}")
     else:
         print("SYSTEM: didn't receive file path")
-        path = "mastodon-106k.ndjson"
+        sys.exit(1)
     main(path)
