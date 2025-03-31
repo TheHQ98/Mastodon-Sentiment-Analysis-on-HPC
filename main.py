@@ -22,7 +22,7 @@ def main(file_path):
         result = subprocess.run(["wc", "-l", file_path],
                                 stdout=subprocess.PIPE, text=True)
         total_lines = result.stdout.strip().split()[0]
-        print("Total lines: " + total_lines)
+        # print("Total lines: " + total_lines)
     else:
         total_lines = None
 
@@ -52,7 +52,7 @@ def main(file_path):
     # Step 3: core 0 collect dictionary from others core
     # --------------------------------------------------------------------------------------------------------
     if size == 1:  # single-core
-        print(sentiments_hour)
+        all_sentiments_hour = sentiments_hour
     else:  # multi-core
         all_sentiments_hour = comm.reduce(sentiments_hour, op=merge_dicts_sentiments_hour, root=0)
 
@@ -61,13 +61,15 @@ def main(file_path):
     # --------------------------------------------------------------------------------------------------------
     if rank == 0:
         if all_sentiments_hour is not None:
-            print(all_sentiments_hour)
+            find_result_sentiments_hour(all_sentiments_hour)
+            # print(all_sentiments_hour)
+        else:
+            print("ERROR: merge all result together")
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         path = sys.argv[1]
-        #print(f"SYSTEM: {path}")
     else:
         print("SYSTEM: didn't receive file path")
         sys.exit(1)

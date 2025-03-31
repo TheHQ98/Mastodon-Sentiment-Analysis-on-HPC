@@ -7,6 +7,7 @@ Description: util functions
 import ujson as json
 from datetime import datetime
 
+TOP_N = 5
 
 def processing_current_line(line: str):
     """
@@ -94,7 +95,7 @@ def add_record_into_dic_hour(sentiments_hour, record):
         # produce time into my format
         dt = datetime.fromisoformat(record["createdAt"].replace("Z", "+00:00"))
         hour = dt.strftime("%Y-%m-%d %H")
-        #print(f"{record.get('createdAt')} vs {hour}")
+        # print(f"{record.get('createdAt')} vs {hour}")
         try:
             # produce sentiment into float
             sentiment = float(record["sentiment"])
@@ -114,3 +115,15 @@ def merge_dicts_sentiments_hour(a, b):
     return a
 
 
+def find_result_sentiments_hour(all_sentiments_hour):
+    # find the N happiest hours in the data
+    happiest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1], reverse=True)[:TOP_N]
+    print(f"========= The {TOP_N} Happiest Hours =========")
+    for time, sentiment in happiest_N:
+        print(f"{time}: {sentiment}")
+
+    # find the N saddest hours in the data
+    saddest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1])[:TOP_N]
+    print(f"\n========= The {TOP_N} Saddest Hours =========")
+    for time, sentiment in saddest_N:
+        print(f"{time}: {sentiment}")
