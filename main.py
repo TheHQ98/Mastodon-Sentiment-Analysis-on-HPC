@@ -1,3 +1,9 @@
+"""
+Author:      Josh Feng - 1266669
+Date:        29th March 2025
+Description: main file
+"""
+
 import sys
 
 from mpi4py import MPI

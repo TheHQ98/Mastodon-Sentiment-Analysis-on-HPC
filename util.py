@@ -1,3 +1,9 @@
+"""
+Author:      Josh Feng - 1266669
+Date:        30th March 2025
+Description: util functions
+"""
+
 import ujson as json
 from datetime import datetime
 
@@ -106,3 +112,5 @@ def merge_dicts_sentiments_hour(a, b):
     for k, v in b.items():
         a[k] = a.get(k, 0) + v
     return a
+
+
