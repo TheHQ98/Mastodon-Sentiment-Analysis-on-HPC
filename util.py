@@ -1,24 +1,20 @@
 """
 Author:      Josh Feng - 1266669
 Date:        31st March 2025
-Description: util functions
+Description: helper functions
 """
 
 import ujson as json
 from datetime import datetime, timedelta
 
-TOP_N = 5
+TOP_N = 5  # find the top N value
 
 
 def processing_current_line(line: str):
     """
-    Get data from current line:
-    - doc.createdAt
-    - doc.sentiment
-    - doc.account.id
-    - doc.account.username
-
-    Return None if line is not legal
+    get values from current line, return None if current line is illegal
+    :param line: current line raw data
+    :return: doc.createdAt, doc.sentiment, doc.account.id, doc.account.username
     """
     line = line.strip()
 
@@ -50,7 +46,14 @@ def processing_current_line(line: str):
     }
 
 
-def start_end_lines(rank_id, total_lines, size):
+def start_end_lines(rank_id: int, total_lines: int, size: int):
+    """
+    Finding the start line and end line of current core
+    :param rank_id: the number of current core
+    :param total_lines: total number of lines
+    :param size: total number of cores
+    :return: start line and end line
+    """
     avg_lines = int(total_lines // size)
     if rank_id == 0:
         return 0, avg_lines
@@ -60,15 +63,14 @@ def start_end_lines(rank_id, total_lines, size):
         return rank_id * avg_lines + 1, avg_lines * (rank_id + 1)
 
 
-def find_own_lines(file_path, start_line, end_line):
+def find_own_lines(file_path: str, start_line: int, end_line: int):
     """
-    Find owned lines and produces
-    :param file_path:
-    :param start_line:
-    :param end_line:
-    :return:
+    Finding own lines and produces the data
+    :param file_path: path of file
+    :param start_line: start line
+    :param end_line: end line
+    :return: sentiments_hour, sentiments_people
     """
-    valid_lines = 0
     current_line = 0
     sentiments_hour = {}
     sentiments_people = {}
@@ -80,11 +82,8 @@ def find_own_lines(file_path, start_line, end_line):
                 if record is None:
                     continue
 
-                # print(record)
                 add_record_into_dic_hour(sentiments_hour, record)
                 add_record_into_dic_people(sentiments_people, record)
-
-                valid_lines += 1
 
             current_line += 1
             if current_line > end_line:
@@ -94,11 +93,14 @@ def find_own_lines(file_path, start_line, end_line):
 
 
 def add_record_into_dic_hour(sentiments_hour, record):
+    """
+    :param sentiments_hour: dictionary
+    :param record: current line value
+    """
     try:
         # produce time into my format
         dt = datetime.fromisoformat(record["createdAt"].replace("Z", "+00:00"))
         hour = dt.strftime("%Y-%m-%d %H")
-        # print(f"{record.get('createdAt')} vs {hour}")
         try:
             # produce sentiment into float
             sentiment = float(record["sentiment"])
@@ -113,33 +115,46 @@ def add_record_into_dic_hour(sentiments_hour, record):
 
 
 def add_record_into_dic_people(sentiments_people, record):
+    """
+    :param sentiments_people: dictionary
+    :param record: current line value
+    """
     key = (record["account_id"], record["account_username"])
     sentiments_people[key] = sentiments_people.get(key, 0.0) + record["sentiment"]
 
 
 def merge_dicts(a, b):
+    """
+    :param a: dictionary to be merged
+    :param b: dictionary to be merged
+    :return: merged dictionary
+    """
     for k, v in b.items():
         a[k] = a.get(k, 0) + v
     return a
 
 
 def find_result_sentiments_hour(all_sentiments_hour):
+    """
+    :param all_sentiments_hour: dictionary
+    """
     # find the N happiest hours in the data
     happiest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1], reverse=True)[:TOP_N]
     print(f"======================== The {TOP_N} Happiest Hours ========================")
     for time, sentiment in happiest_N:
-        # print(f"{time}: {sentiment}")
         format_output_hour(time, sentiment)
 
     # find the N saddest hours in the data
     saddest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1])[:TOP_N]
     print(f"\n======================== The {TOP_N} Saddest Hours ========================")
     for time, sentiment in saddest_N:
-        # print(f"{time}: {sentiment}")
         format_output_hour(time, sentiment)
 
 
 def find_result_sentiments_people(all_sentiments_people):
+    """
+    :param all_sentiments_people: dictionary
+    """
     # find the N happiest people in the data
     happiest_N = sorted(all_sentiments_people.items(), key=lambda x: x[1], reverse=True)[:TOP_N]
     print(f"\n================================= The {TOP_N} Happiest People =================================")
@@ -154,6 +169,11 @@ def find_result_sentiments_people(all_sentiments_people):
 
 
 def format_output_hour(time, sentiment):
+    """
+    produce the time into current format
+    :param time: time value
+    :param sentiment: sentiment value
+    """
     dt = datetime.strptime(time, "%Y-%m-%d %H")
     dt_end = dt + timedelta(hours=1)
 
@@ -171,6 +191,10 @@ def format_output_hour(time, sentiment):
 
 
 def day_suffix(day):
+    """
+    :param day: day value
+    :return: string
+    """
     if 11 <= day % 100 <= 13:
         return "th"
     elif day % 10 == 1:
@@ -184,6 +208,10 @@ def day_suffix(day):
 
 
 def convert_hour(hour):
+    """
+    :param hour: hour value
+    :return: string
+    """
     if hour == 0 or hour == 24:
         return 12, "am"
     elif 1 <= hour < 12:
