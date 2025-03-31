@@ -5,9 +5,10 @@ Description: util functions
 """
 
 import ujson as json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 TOP_N = 5
+
 
 def processing_current_line(line: str):
     """
@@ -118,12 +119,55 @@ def merge_dicts_sentiments_hour(a, b):
 def find_result_sentiments_hour(all_sentiments_hour):
     # find the N happiest hours in the data
     happiest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1], reverse=True)[:TOP_N]
-    print(f"========= The {TOP_N} Happiest Hours =========")
+    print(f"======================== The {TOP_N} Happiest Hours ========================")
     for time, sentiment in happiest_N:
-        print(f"{time}: {sentiment}")
+        # print(f"{time}: {sentiment}")
+        format_output_hour(time, sentiment)
 
     # find the N saddest hours in the data
     saddest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1])[:TOP_N]
-    print(f"\n========= The {TOP_N} Saddest Hours =========")
+    print(f"\n======================== The {TOP_N} Saddest Hours ========================")
     for time, sentiment in saddest_N:
-        print(f"{time}: {sentiment}")
+        # print(f"{time}: {sentiment}")
+        format_output_hour(time, sentiment)
+
+
+def format_output_hour(time, sentiment):
+    dt = datetime.strptime(time, "%Y-%m-%d %H")
+    dt_end = dt + timedelta(hours=1)
+
+    start_hour, am_pm = convert_hour(dt.hour)
+    end_hour, _ = convert_hour(dt_end.hour)
+
+    day = dt.day
+    month = dt.strftime("%B")
+    year = dt.year
+    day_str = f"{day}{day_suffix(day)}"
+    sentiment_str = f"{sentiment:+.4f}"
+
+    print(f"{start_hour}-{end_hour}{am_pm} on {day_str} {month} {year}"
+          f" with an overall sentiment score of {sentiment_str}")
+
+
+def day_suffix(day):
+    if 11 <= day % 100 <= 13:
+        return "th"
+    elif day % 10 == 1:
+        return "st"
+    elif day % 10 == 2:
+        return "nd"
+    elif day % 10 == 3:
+        return "rd"
+    else:
+        return "th"
+
+
+def convert_hour(hour):
+    if hour == 0 or hour == 24:
+        return 12, "am"
+    elif 1 <= hour < 12:
+        return hour, "am"
+    elif hour == 12:
+        return 12, "pm"
+    elif 13 <= hour < 24:
+        return hour - 12, "pm"

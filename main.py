@@ -15,7 +15,6 @@ def main(file_path):
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
-    all_sentiments_hour = None
 
     # calculate the total lines of the file
     if rank == 0:
