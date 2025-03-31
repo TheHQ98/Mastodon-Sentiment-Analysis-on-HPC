@@ -1,6 +1,6 @@
 """
 Author:      Josh Feng - 1266669
-Date:        30th March 2025
+Date:        31st March 2025
 Description: util functions
 """
 
@@ -71,6 +71,7 @@ def find_own_lines(file_path, start_line, end_line):
     valid_lines = 0
     current_line = 0
     sentiments_hour = {}
+    sentiments_people = {}
 
     with open(file_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -79,8 +80,9 @@ def find_own_lines(file_path, start_line, end_line):
                 if record is None:
                     continue
 
-                #print(record)
+                # print(record)
                 add_record_into_dic_hour(sentiments_hour, record)
+                add_record_into_dic_people(sentiments_people, record)
 
                 valid_lines += 1
 
@@ -88,7 +90,7 @@ def find_own_lines(file_path, start_line, end_line):
             if current_line > end_line:
                 break
 
-    return sentiments_hour
+    return sentiments_hour, sentiments_people
 
 
 def add_record_into_dic_hour(sentiments_hour, record):
@@ -110,7 +112,12 @@ def add_record_into_dic_hour(sentiments_hour, record):
         print("ERROR: processing record into time")
 
 
-def merge_dicts_sentiments_hour(a, b):
+def add_record_into_dic_people(sentiments_people, record):
+    key = (record["account_id"], record["account_username"])
+    sentiments_people[key] = sentiments_people.get(key, 0.0) + record["sentiment"]
+
+
+def merge_dicts(a, b):
     for k, v in b.items():
         a[k] = a.get(k, 0) + v
     return a
@@ -130,6 +137,20 @@ def find_result_sentiments_hour(all_sentiments_hour):
     for time, sentiment in saddest_N:
         # print(f"{time}: {sentiment}")
         format_output_hour(time, sentiment)
+
+
+def find_result_sentiments_people(all_sentiments_people):
+    # find the N happiest people in the data
+    happiest_N = sorted(all_sentiments_people.items(), key=lambda x: x[1], reverse=True)[:TOP_N]
+    print(f"\n================================= The {TOP_N} Happiest People =================================")
+    for (account_id, account_username), sentiment in happiest_N:
+        print(f"{account_username}, account id {account_id} with a total positive sentiment score of {sentiment:+.4f}")
+
+    # find the N saddest people in the data
+    saddest_N = sorted(all_sentiments_people.items(), key=lambda x: x[1])[:TOP_N]
+    print(f"\n================================= The {TOP_N} Saddest People =================================")
+    for (account_id, account_username), sentiment in saddest_N:
+        print(f"{account_username}, account id {account_id} with a total negative sentiment score of {sentiment:+.4f}")
 
 
 def format_output_hour(time, sentiment):

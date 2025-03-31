@@ -1,11 +1,10 @@
 """
 Author:      Josh Feng - 1266669
-Date:        29th March 2025
+Date:        30th March 2025
 Description: main file
 """
 
 import sys
-
 from mpi4py import MPI
 import subprocess
 from util import *
@@ -44,23 +43,27 @@ def main(file_path):
     # --------------------------------------------------------------------------------------------------------
     # Step 2: Produce own lines with two dictionary: sentiments_hour and sentiments_people
     # --------------------------------------------------------------------------------------------------------
-    sentiments_hour = find_own_lines(file_path, start_line, end_line)
+    sentiments_hour, sentiments_people = find_own_lines(file_path, start_line, end_line)
     # print(f"Rank {rank}: {sentiments_hour}")
+    # print(f"Rank {rank}: {sentiments_people}")
 
     # --------------------------------------------------------------------------------------------------------
     # Step 3: core 0 collect dictionary from others core
     # --------------------------------------------------------------------------------------------------------
     if size == 1:  # single-core
         all_sentiments_hour = sentiments_hour
+        all_sentiments_people = sentiments_people
     else:  # multi-core
-        all_sentiments_hour = comm.reduce(sentiments_hour, op=merge_dicts_sentiments_hour, root=0)
+        all_sentiments_hour = comm.reduce(sentiments_hour, op=merge_dicts, root=0)
+        all_sentiments_people = comm.reduce(sentiments_people, op=merge_dicts, root=0)
 
     # --------------------------------------------------------------------------------------------------------
     # Step 4: core 0 produce final result
     # --------------------------------------------------------------------------------------------------------
     if rank == 0:
-        if all_sentiments_hour is not None:
+        if all_sentiments_hour is not None and all_sentiments_people is not None:
             find_result_sentiments_hour(all_sentiments_hour)
+            find_result_sentiments_people(all_sentiments_people)
             # print(all_sentiments_hour)
         else:
             print("ERROR: merge all result together")
