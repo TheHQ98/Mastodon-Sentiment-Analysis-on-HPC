@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --job-name=1node1core_job
-#SBATCH --partition=cascade
 #SBATCH --output=/home/chenhaof/result/1n1c_result_job_%j.out
 #SBATCH --error=/home/chenhaof/result/1n1c_result_job_%j.err
 #SBATCH --time=02:00:00
