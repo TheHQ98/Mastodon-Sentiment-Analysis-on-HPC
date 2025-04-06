@@ -142,13 +142,13 @@ def find_result_sentiments_hour(all_sentiments_hour):
     happiest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1], reverse=True)[:TOP_N]
     print(f"======================== The {TOP_N} Happiest Hours ========================")
     for time, sentiment in happiest_N:
-        format_output_hour(time, sentiment)
+        print_hour_output(time, sentiment)
 
     # find the N saddest hours in the data
     saddest_N = sorted(all_sentiments_hour.items(), key=lambda x: x[1])[:TOP_N]
     print(f"\n======================== The {TOP_N} Saddest Hours ========================")
     for time, sentiment in saddest_N:
-        format_output_hour(time, sentiment)
+        print_hour_output(time, sentiment)
 
 
 def find_result_sentiments_people(all_sentiments_people):
@@ -168,7 +168,7 @@ def find_result_sentiments_people(all_sentiments_people):
         print(f"{account_username}, account id {account_id} with a total negative sentiment score of {sentiment:+.4f}")
 
 
-def format_output_hour(time, sentiment):
+def print_hour_output(time, sentiment):
     """
     produce the time into current format
     :param time: time value
@@ -183,14 +183,13 @@ def format_output_hour(time, sentiment):
     day = dt.day
     month = dt.strftime("%B")
     year = dt.year
-    day_str = f"{day}{day_suffix(day)}"
     sentiment_str = f"{sentiment:+.4f}"
 
-    print(f"{start_hour}-{end_hour}{am_pm} on {day_str} {month} {year}"
+    print(f"{start_hour}-{end_hour}{am_pm} on {day}{convert_day_suffix(day)} {month} {year}"
           f" with an overall sentiment score of {sentiment_str}")
 
 
-def day_suffix(day):
+def convert_day_suffix(day):
     """
     :param day: day value
     :return: string

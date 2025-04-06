@@ -8,4 +8,6 @@
 #SBATCH --cpus-per-task=1
 
 module load SciPy-bundle/2022.05
+
+# The path of the file must be provided
 time mpirun python3 main.py /home/chenhaof/mastodon-144g.ndjson
